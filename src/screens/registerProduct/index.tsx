@@ -13,6 +13,7 @@ import {
   InputNumber,
   message,
   Result,
+  Select,
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
@@ -22,6 +23,7 @@ import './styles.css';
 const { Content } = Layout;
 const { Title } = Typography;
 const { TextArea } = Input;
+const { Option } = Select;
 
 type FormData = {
   bar_code: string;
@@ -236,13 +238,37 @@ function RegisterProduct(): JSX.Element {
                         validateStatus={error?.message && 'error'}
                         hasFeedback
                         help={error?.message}
+                        initialValue={value}
                       >
-                        <Input
+                        <Select
+                          showSearch
+                          style={{ width: '100%' }}
                           size="large"
-                          placeholder="Ex. peça, caixa, saco, garrafa, gramas, metros ..."
+                          placeholder="Search to Select"
                           onChange={onChange}
-                          value={value}
-                        />
+                          optionFilterProp="children"
+                          filterOption={(input, option) =>
+                            (option!.children as unknown as string).includes(
+                              input,
+                            )
+                          }
+                          filterSort={(optionA, optionB) =>
+                            (optionA!.children as unknown as string)
+                              .toLowerCase()
+                              .localeCompare(
+                                (
+                                  optionB!.children as unknown as string
+                                ).toLowerCase(),
+                              )
+                          }
+                        >
+                          <Option value="Caixa">Caixa</Option>
+                          <Option value="Peças">Peça</Option>
+                          <Option value="Saco">Saco</Option>
+                          <Option value="Garrafa">Garrafa</Option>
+                          <Option value="Metro">Metro</Option>
+                          <Option value="Gramas">Gramas</Option>
+                        </Select>
                       </Form.Item>
                     )}
                   />
