@@ -20,6 +20,7 @@ type OrdersContextData = {
   orders: OrderState[];
   setStatusFilter: React.Dispatch<React.SetStateAction<Status>>;
   productsOrder: ProductOrder[];
+  statusFilter: Status;
   addProductToOrder(data: AddProductToOrderProps): Promise<void>;
   updateProductOrderAmount(data: UpdateProductOrderAmount): Promise<void>;
   clearProductsOrder(): void;
@@ -85,6 +86,18 @@ type ApproveOrderProps = {
   order_id: string;
 };
 
+type OrderProduct = {
+  id: string;
+  product: Product;
+  quantity: number;
+  total_price: number;
+};
+
+type CreateOrderApiResponse = {
+  order: Order;
+  order_products: OrderProduct[];
+};
+
 function OrdersProvider({ children }: OrdersProviderProps): JSX.Element {
   const [orders, setOrders] = useState<OrderState[]>([]);
   const [productsOrder, setProductsOrder] = useState<ProductOrder[]>([]);
@@ -97,15 +110,11 @@ function OrdersProvider({ children }: OrdersProviderProps): JSX.Element {
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
-    const { data } = await api.get<Order[]>('/orders', {
-      params: {
-        status: statusFilter,
-      },
-    });
+    const { data } = await api.get<Order[]>('/orders');
 
     setLoading(false);
     return data;
-  }, [statusFilter]);
+  }, []);
 
   useEffect(() => {
     loadOrders().then(response => {
@@ -243,17 +252,48 @@ function OrdersProvider({ children }: OrdersProviderProps): JSX.Element {
         quantity: amount,
       }));
 
-      await api.post('/orders', {
-        customer_id,
-        products: productsOrderFormatted,
-      });
+      const { data: created_order } = await api.post<CreateOrderApiResponse>(
+        '/orders',
+        {
+          customer_id,
+          products: productsOrderFormatted,
+        },
+      );
+
+      const { order } = created_order;
+
+      const newOrders = [...orders];
+
+      const created_order_formatted: OrderState = {
+        ...order,
+        status_formatted: statusVariations[order.status],
+        price_formatted: currencyFormatter(order.price),
+        created_at_formatted: dateFormatter(order.created_at),
+      };
+
+      newOrders.push(created_order_formatted);
+
+      setOrders(newOrders);
     },
-    [productsOrder],
+    [productsOrder, orders],
   );
 
-  const approveOrder = useCallback(async ({ order_id }: ApproveOrderProps) => {
-    await api.post(`orders/${order_id}`);
-  }, []);
+  const approveOrder = useCallback(
+    async ({ order_id }: ApproveOrderProps) => {
+      await api.post(`orders/${order_id}`);
+
+      const newOrders = [...orders];
+
+      const findOrderIndex = newOrders.findIndex(
+        order => order.id === order_id,
+      );
+
+      newOrders[findOrderIndex].status = 'approved';
+
+      setOrders(newOrders);
+    },
+    [orders],
+  );
 
   return (
     <OrdersContext.Provider
@@ -261,6 +301,7 @@ function OrdersProvider({ children }: OrdersProviderProps): JSX.Element {
         loading,
         orders,
         setStatusFilter,
+        statusFilter,
         addProductToOrder,
         productsOrder,
         clearProductsOrder,
