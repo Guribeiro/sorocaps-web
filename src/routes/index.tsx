@@ -12,6 +12,7 @@ import UpdateCustomer from '../screens/updateCustomer';
 import RegisterSaleOrder from '../screens/registerSaleOrder';
 import RegisterSaleOrderProducts from '../screens/registerSaleOrderProducts';
 import SaleOrderDetails from '../screens/saleOrderDetails';
+import ApprovedSaleOrderDetails from '../screens/approvedSaleOrderDetails';
 import ResumeSaleOrder from '../screens/resumeSaleOrder';
 import PrivateRoute from './PrivateRoute';
 import { useAuth } from '../hooks/auth';
@@ -48,6 +49,10 @@ function Routes(): JSX.Element {
           <Route
             path="/sale-order/:sale_order_id"
             element={<SaleOrderDetails />}
+          />
+          <Route
+            path="/sale-order/:sale_order_id/approved"
+            element={<ApprovedSaleOrderDetails />}
           />
           <Route
             path="/sale-order/products"
