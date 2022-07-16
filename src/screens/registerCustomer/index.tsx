@@ -22,6 +22,10 @@ import { useCustomers } from '../../hooks/customers';
 const { Content } = Layout;
 const { Title } = Typography;
 
+type Error = {
+  message: string;
+};
+
 type FormData = {
   cnpj: string;
   corporate_name: string;
@@ -57,7 +61,8 @@ function RegisterCustomer(): JSX.Element {
         reset();
         setIsResultVisible(true);
       } catch (error) {
-        message.error('Falha no cadastro do cliente');
+        const err = error as Error;
+        message.error(err.message);
       }
     },
     [reset, create],
@@ -108,6 +113,7 @@ function RegisterCustomer(): JSX.Element {
                         validateStatus={error?.message && 'error'}
                         hasFeedback
                         help={error?.message}
+                        initialValue={value}
                       >
                         <MaskedInput
                           mask="00.000.000/0000-00"
@@ -115,7 +121,6 @@ function RegisterCustomer(): JSX.Element {
                           placeholder="Ex. XX.XXX.XXX/0001-XX"
                           onChange={onChange}
                           value={value}
-                          defaultValue={value}
                         />
                       </Form.Item>
                     )}
