@@ -13,6 +13,7 @@ type AuthContextData = {
   auth: AuthState;
   signup(data: SignupProps): Promise<void>;
   signin(data: SigninProps): Promise<void>;
+  signOut(): Promise<void>;
 };
 
 type AuthProviderProps = {
@@ -71,7 +72,7 @@ function AuthProvider({ children }: AuthProviderProps): JSX.Element {
 
   const signup = useCallback(
     async ({ full_name, username, email, password }: SignupProps) => {
-      const response = await api.post<User>('/users', {
+      await api.post<User>('/users', {
         full_name,
         username,
         email,
@@ -100,8 +101,15 @@ function AuthProvider({ children }: AuthProviderProps): JSX.Element {
     });
   }, []);
 
+  const signOut = useCallback(async () => {
+    setAuth({} as AuthState);
+
+    localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+    localStorage.removeItem(AUTH_USER_STORAGE_KEY);
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ auth, signup, signin }}>
+    <AuthContext.Provider value={{ auth, signup, signin, signOut }}>
       {children}
     </AuthContext.Provider>
   );
