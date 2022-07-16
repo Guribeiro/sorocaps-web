@@ -16,6 +16,7 @@ type ProductsContextData = {
   loadProducts(): Promise<Product[]>;
   create(data: CreateProps): Promise<void>;
   remove(data: RemoveProps): Promise<void>;
+  update(data: UpdateProps): Promise<void>;
   products: ProductState[];
   stocks: Stock[];
   selectedProduct: ProductState;
@@ -32,6 +33,17 @@ type ProductsProviderProps = {
 
 export type Product = {
   id: string;
+  bar_code: string;
+  title: string;
+  description: string;
+  unit_of_measurement: string;
+  quantity_in_units: number;
+  buy_price: number;
+  sale_price: number;
+};
+
+type UpdateProps = {
+  product_id: string;
   bar_code: string;
   title: string;
   description: string;
@@ -133,6 +145,49 @@ function ProductsProvider({ children }: ProductsProviderProps): JSX.Element {
     setProducts(prev => prev.filter(product => product.id !== product_id));
   }, []);
 
+  const update = useCallback(
+    async ({
+      product_id,
+      bar_code,
+      title,
+      description,
+      quantity_in_units,
+      unit_of_measurement,
+      buy_price,
+      sale_price,
+    }: UpdateProps) => {
+      const { data: updated_product } = await api.put<Product>(
+        `/products/${product_id}`,
+        {
+          bar_code,
+          title,
+          description,
+          quantity_in_units,
+          unit_of_measurement,
+          buy_price,
+          sale_price,
+        },
+      );
+
+      const newProducts = [...products];
+
+      const findProductIndex = newProducts.findIndex(
+        product => product.id === product_id,
+      );
+
+      const updated_product_formatted: ProductState = {
+        ...updated_product,
+        buy_price_formatted: currencyFormatter(updated_product.buy_price),
+        sale_price_formatted: currencyFormatter(updated_product.sale_price),
+      };
+
+      newProducts[findProductIndex] = updated_product_formatted;
+
+      setProducts(newProducts);
+    },
+    [products],
+  );
+
   useEffect(() => {
     loadProducts().then(response => {
       setProducts(
@@ -153,6 +208,7 @@ function ProductsProvider({ children }: ProductsProviderProps): JSX.Element {
         loadProducts,
         create,
         remove,
+        update,
         products,
         stocks,
         selectedProduct,

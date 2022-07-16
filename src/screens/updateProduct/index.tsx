@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -13,15 +13,19 @@ import {
   InputNumber,
   message,
   Modal,
+  Empty,
+  Space,
+  Select,
 } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { DeleteOutlined } from '@ant-design/icons';
-import { useProducts } from '../../hooks/products';
+import { ProductState, useProducts } from '../../hooks/products';
 
 const { Content } = Layout;
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
+const { Option } = Select;
 
 type FormData = {
   bar_code: string;
@@ -61,21 +65,32 @@ const schema = yup.object().shape({
 
 function UpdateProduct(): JSX.Element {
   const navigate = useNavigate();
-  const { create, remove } = useProducts();
-  const { selectedProduct } = useProducts();
+  const { remove, update } = useProducts();
+  const { products } = useProducts();
+  const { product_id } = useParams();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [removeLoading, setRemoveLoading] = useState(false);
+
+  const product = useMemo(() => {
+    const findProduct = products.find(p => p.id === product_id);
+
+    if (!findProduct) {
+      return {} as ProductState;
+    }
+
+    return findProduct;
+  }, [product_id, products]);
 
   const { handleSubmit, control, reset } = useForm<FormData>({
     resolver: yupResolver(schema),
     defaultValues: {
-      bar_code: selectedProduct.bar_code,
-      title: selectedProduct.title,
-      description: selectedProduct.description,
-      unit_of_measurement: selectedProduct.unit_of_measurement,
-      quantity_in_units: selectedProduct.quantity_in_units,
-      buy_price: selectedProduct.buy_price,
-      sale_price: selectedProduct.sale_price,
+      bar_code: product.bar_code,
+      title: product.title,
+      description: product.description,
+      unit_of_measurement: product.unit_of_measurement,
+      quantity_in_units: product.quantity_in_units,
+      buy_price: product.buy_price,
+      sale_price: product.sale_price,
     },
   });
 
@@ -90,17 +105,8 @@ function UpdateProduct(): JSX.Element {
       sale_price,
     }: FormData) => {
       try {
-        // await create({
-        //   bar_code,
-        //   title,
-        //   description,
-        //   quantity_in_units,
-        //   unit_of_measurement,
-        //   buy_price,
-        //   sale_price,
-        // });
-
-        console.log({
+        await update({
+          product_id: product.id,
           bar_code,
           title,
           description,
@@ -110,22 +116,22 @@ function UpdateProduct(): JSX.Element {
           sale_price,
         });
 
-        message.success('produto criado com sucesso');
+        message.success('produto atualizado com sucesso');
 
         reset();
         navigate('/dashboard');
       } catch (error) {
-        message.error('Falha na criação do produto');
+        message.error('Falha na atualização do produto');
       }
     },
-    [reset, navigate],
+    [reset, navigate, update, product.id],
   );
 
   const handleRemoveProduct = useCallback(async () => {
     try {
-      if (!selectedProduct) return;
+      if (!product) return;
 
-      await remove({ product_id: selectedProduct.id });
+      await remove({ product_id: product.id });
 
       message.success('produto excluído com sucesso');
       navigate('/dashboard');
@@ -137,7 +143,7 @@ function UpdateProduct(): JSX.Element {
     } finally {
       setRemoveLoading(false);
     }
-  }, [navigate, remove, selectedProduct]);
+  }, [navigate, remove, product]);
 
   return (
     <Layout className="layout" style={{ minHeight: '100vh' }}>
@@ -155,229 +161,261 @@ function UpdateProduct(): JSX.Element {
         </Paragraph>
       </Modal>
 
-      <Row justify="center">
-        <Content style={{ maxWidth: 680 }}>
-          <Row>
-            <Col span={20}>
-              <Title level={3}>Atualizar endereço do cliente</Title>
-            </Col>
-            <Col span={4}>
-              <Button
-                type="primary"
-                danger
-                onClick={() => setIsModalVisible(true)}
-              >
-                Excluir produto
-                <DeleteOutlined />
-              </Button>
-            </Col>
-          </Row>
-          <Form
-            layout="vertical"
-            onSubmitCapture={handleSubmit(onSubmit)}
-            style={{ paddingBottom: 30 }}
-          >
-            <Col span={24}>
-              <Controller
-                name="bar_code"
-                control={control}
-                render={({
-                  field: { onChange, value },
-                  fieldState: { error },
-                }) => (
-                  <Form.Item
-                    name={['bar_code']}
-                    label="Código de barras"
-                    validateStatus={error?.message && 'error'}
-                    hasFeedback
-                    help={error?.message}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="Ex. 0608473184014"
-                      onChange={onChange}
-                      value={value}
-                      defaultValue={value}
-                    />
-                  </Form.Item>
-                )}
-              />
-
-              <Controller
-                name="title"
-                control={control}
-                render={({
-                  field: { onChange, value },
-                  fieldState: { error },
-                }) => (
-                  <Form.Item
-                    name={['title']}
-                    label="Nome do produto"
-                    validateStatus={error?.message && 'error'}
-                    hasFeedback
-                    help={error?.message}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="Ex. Suplemento alimentar de melatonina"
-                      onChange={onChange}
-                      value={value}
-                      defaultValue={value}
-                    />
-                  </Form.Item>
-                )}
-              />
-
-              <Controller
-                name="description"
-                control={control}
-                render={({
-                  field: { onChange, value },
-                  fieldState: { error },
-                }) => (
-                  <Form.Item
-                    name={['description']}
-                    label="Descrição do produto"
-                    validateStatus={error?.message && 'error'}
-                    hasFeedback
-                    help={error?.message}
-                  >
-                    <TextArea
-                      size="large"
-                      placeholder="Ex. Suplemento alimentar de melatonina"
-                      onChange={onChange}
-                      value={value}
-                      defaultValue={value}
-                    />
-                  </Form.Item>
-                )}
-              />
-
-              <Controller
-                name="unit_of_measurement"
-                control={control}
-                render={({
-                  field: { onChange, value },
-                  fieldState: { error },
-                }) => (
-                  <Form.Item
-                    name={['unit_of_measurement']}
-                    label="Unidade de medida"
-                    validateStatus={error?.message && 'error'}
-                    hasFeedback
-                    help={error?.message}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="Ex. peça, caixa, saco, garrafa, gramas, metros ..."
-                      onChange={onChange}
-                      value={value}
-                      defaultValue={value}
-                    />
-                  </Form.Item>
-                )}
-              />
-
-              <Controller
-                name="quantity_in_units"
-                control={control}
-                render={({
-                  field: { onChange, value },
-                  fieldState: { error },
-                }) => (
-                  <Form.Item
-                    name={['quantity_in_units']}
-                    label="Unidades por unidade de medida"
-                    validateStatus={error?.message && 'error'}
-                    hasFeedback
-                    help={error?.message}
-                    initialValue={value}
-                  >
-                    <InputNumber
-                      size="large"
-                      placeholder="0"
-                      min={0}
-                      onChange={onChange}
-                      value={value}
-                      defaultValue={value}
-                    />
-                  </Form.Item>
-                )}
-              />
-
-              <Row justify="center" gutter={30}>
-                <Col span={12}>
-                  <Controller
-                    name="buy_price"
-                    control={control}
-                    render={({
-                      field: { onChange, value },
-                      fieldState: { error },
-                    }) => (
-                      <Form.Item
-                        name={['buy_price']}
-                        label="Valor de compra"
-                        validateStatus={error?.message && 'error'}
-                        hasFeedback
-                        help={error?.message}
-                        initialValue={value}
-                      >
-                        <InputNumber
-                          style={{ width: '100%' }}
-                          stringMode
-                          precision={2}
-                          size="large"
-                          formatter={v =>
-                            `$ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                          }
-                          onChange={onChange}
-                          value={value}
-                        />
-                      </Form.Item>
-                    )}
-                  />
-                </Col>
-                <Col span={12}>
-                  <Controller
-                    name="sale_price"
-                    control={control}
-                    render={({
-                      field: { onChange, value },
-                      fieldState: { error },
-                    }) => (
-                      <Form.Item
-                        name={['sale_price']}
-                        label="Valor de venda"
-                        validateStatus={error?.message && 'error'}
-                        hasFeedback
-                        help={error?.message}
-                        initialValue={value}
-                      >
-                        <InputNumber
-                          style={{ width: '100%' }}
-                          stringMode
-                          precision={2}
-                          size="large"
-                          formatter={v =>
-                            `$ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                          }
-                          onChange={onChange}
-                          value={value}
-                        />
-                      </Form.Item>
-                    )}
-                  />
-                </Col>
-              </Row>
-            </Col>
-            <Row gutter={30} style={{ marginTop: 30 }}>
-              <Button type="primary" block size="large" htmlType="submit">
-                Cadastrar
-              </Button>
+      {!product.id ? (
+        <Empty />
+      ) : (
+        <Row justify="center">
+          <Content style={{ maxWidth: 680 }}>
+            <Row>
+              <Col span={20}>
+                <Title level={3}>Atualizar dados do produto</Title>
+              </Col>
             </Row>
-          </Form>
-        </Content>
-      </Row>
+            <Form
+              layout="vertical"
+              onSubmitCapture={handleSubmit(onSubmit)}
+              style={{ paddingBottom: 30 }}
+            >
+              <Col span={24}>
+                <Controller
+                  name="bar_code"
+                  control={control}
+                  render={({
+                    field: { onChange, value },
+                    fieldState: { error },
+                  }) => (
+                    <Form.Item
+                      name={['bar_code']}
+                      label="Código de barras"
+                      validateStatus={error?.message && 'error'}
+                      hasFeedback
+                      help={error?.message}
+                      initialValue={value}
+                    >
+                      <Input
+                        size="large"
+                        placeholder="Ex. 0608473184014"
+                        onChange={onChange}
+                        value={value}
+                      />
+                    </Form.Item>
+                  )}
+                />
+
+                <Controller
+                  name="title"
+                  control={control}
+                  render={({
+                    field: { onChange, value },
+                    fieldState: { error },
+                  }) => (
+                    <Form.Item
+                      name={['title']}
+                      label="Nome do produto"
+                      validateStatus={error?.message && 'error'}
+                      hasFeedback
+                      help={error?.message}
+                      initialValue={value}
+                    >
+                      <Input
+                        size="large"
+                        placeholder="Ex. Suplemento alimentar de melatonina"
+                        onChange={onChange}
+                        value={value}
+                      />
+                    </Form.Item>
+                  )}
+                />
+
+                <Controller
+                  name="description"
+                  control={control}
+                  render={({
+                    field: { onChange, value },
+                    fieldState: { error },
+                  }) => (
+                    <Form.Item
+                      name={['description']}
+                      label="Descrição do produto"
+                      validateStatus={error?.message && 'error'}
+                      hasFeedback
+                      help={error?.message}
+                      initialValue={value}
+                    >
+                      <TextArea
+                        size="large"
+                        placeholder="Ex. Suplemento alimentar de melatonina"
+                        onChange={onChange}
+                        value={value}
+                      />
+                    </Form.Item>
+                  )}
+                />
+
+                <Controller
+                  name="unit_of_measurement"
+                  control={control}
+                  render={({
+                    field: { onChange, value },
+                    fieldState: { error },
+                  }) => (
+                    <Form.Item
+                      name={['unit_of_measurement']}
+                      label="Unidade de medida"
+                      validateStatus={error?.message && 'error'}
+                      hasFeedback
+                      help={error?.message}
+                      initialValue={[value]}
+                    >
+                      <Select
+                        showSearch
+                        style={{ width: '100%' }}
+                        size="large"
+                        placeholder="Search to Select"
+                        onChange={onChange}
+                        optionFilterProp="children"
+                        filterOption={(input, option) =>
+                          (option!.children as unknown as string).includes(
+                            input,
+                          )
+                        }
+                        filterSort={(optionA, optionB) =>
+                          (optionA!.children as unknown as string)
+                            .toLowerCase()
+                            .localeCompare(
+                              (
+                                optionB!.children as unknown as string
+                              ).toLowerCase(),
+                            )
+                        }
+                      >
+                        <Option value="Caixa">Caixa</Option>
+                        <Option value="Peças">Peça</Option>
+                        <Option value="Saco">Saco</Option>
+                        <Option value="Garrafa">Garrafa</Option>
+                        <Option value="Metro">Metro</Option>
+                        <Option value="Gramas">Gramas</Option>
+                      </Select>
+                    </Form.Item>
+                  )}
+                />
+
+                <Controller
+                  name="quantity_in_units"
+                  control={control}
+                  render={({
+                    field: { onChange, value },
+                    fieldState: { error },
+                  }) => (
+                    <Form.Item
+                      name={['quantity_in_units']}
+                      label="Unidades por unidade de medida"
+                      validateStatus={error?.message && 'error'}
+                      hasFeedback
+                      help={error?.message}
+                      initialValue={value}
+                    >
+                      <InputNumber
+                        size="large"
+                        placeholder="0"
+                        min={0}
+                        onChange={onChange}
+                        value={value}
+                      />
+                    </Form.Item>
+                  )}
+                />
+
+                <Row justify="center" gutter={30}>
+                  <Col span={12}>
+                    <Controller
+                      name="buy_price"
+                      control={control}
+                      render={({
+                        field: { onChange, value },
+                        fieldState: { error },
+                      }) => (
+                        <Form.Item
+                          name={['buy_price']}
+                          label="Valor de compra"
+                          validateStatus={error?.message && 'error'}
+                          hasFeedback
+                          help={error?.message}
+                          initialValue={value}
+                        >
+                          <InputNumber
+                            style={{ width: '100%' }}
+                            stringMode
+                            precision={2}
+                            size="large"
+                            formatter={v =>
+                              `$ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                            }
+                            onChange={onChange}
+                            value={value}
+                            defaultValue={value}
+                          />
+                        </Form.Item>
+                      )}
+                    />
+                  </Col>
+                  <Col span={12}>
+                    <Controller
+                      name="sale_price"
+                      control={control}
+                      render={({
+                        field: { onChange, value },
+                        fieldState: { error },
+                      }) => (
+                        <Form.Item
+                          name={['sale_price']}
+                          label="Valor de venda"
+                          validateStatus={error?.message && 'error'}
+                          hasFeedback
+                          help={error?.message}
+                          initialValue={value}
+                        >
+                          <InputNumber
+                            style={{ width: '100%' }}
+                            stringMode
+                            precision={2}
+                            size="large"
+                            formatter={v =>
+                              `$ ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                            }
+                            onChange={onChange}
+                            value={value}
+                          />
+                        </Form.Item>
+                      )}
+                    />
+                  </Col>
+                </Row>
+              </Col>
+              <Space
+                direction="vertical"
+                size="middle"
+                style={{ width: '100%' }}
+              >
+                <Button type="primary" block size="large" htmlType="submit">
+                  Atualizar
+                </Button>
+                <Button
+                  type="primary"
+                  danger
+                  block
+                  size="large"
+                  htmlType="button"
+                  onClick={() => setIsModalVisible(true)}
+                >
+                  Excluir produto
+                  <DeleteOutlined />
+                </Button>
+              </Space>
+            </Form>
+          </Content>
+        </Row>
+      )}
     </Layout>
   );
 }
