@@ -122,6 +122,7 @@ function SaleOrderDetails(): JSX.Element {
                 <Item label="Cliente">{order.customer.corporate_name}</Item>
                 <Item label="CNPJ">{order.customer.cnpj}</Item>
                 <Item label="Telefone">{order.customer.phone}</Item>
+                <Item label="Status">{order.status_formatted}</Item>
                 <Item label="Data do pedido">{order.created_at_formatted}</Item>
                 <Item label="Valor total do pedido">
                   {order.price_formatted}
