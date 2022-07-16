@@ -1,0 +1,8 @@
+.steps-container {
+  display: flex;
+  align-items: center;
+}
+
+.step-container-row {
+  border: 1px solid blue;
+}
