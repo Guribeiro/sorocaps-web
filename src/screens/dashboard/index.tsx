@@ -54,7 +54,7 @@ function Dashboard(): JSX.Element {
       const err = error as Error;
       message.error(err.message);
     }
-  }, []);
+  }, [signOut]);
 
   const openModal = useCallback(() => {
     Modal.confirm({

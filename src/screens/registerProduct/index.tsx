@@ -244,7 +244,7 @@ function RegisterProduct(): JSX.Element {
                           showSearch
                           style={{ width: '100%' }}
                           size="large"
-                          placeholder="Search to Select"
+                          placeholder="Selecionar uma opção"
                           onChange={onChange}
                           optionFilterProp="children"
                           filterOption={(input, option) =>

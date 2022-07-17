@@ -12,7 +12,7 @@ import { useStocks } from './stocks';
 import currencyFormatter from '../utils/currencyFormatter';
 import api from '../shared/services/api';
 import { useAuth } from './auth';
-import { Customer } from './customers';
+import { Customer, useCustomers } from './customers';
 import dateFormatter from '../utils/dateFormatter';
 
 type OrdersContextData = {
@@ -107,27 +107,19 @@ function OrdersProvider({ children }: OrdersProviderProps): JSX.Element {
 
   const { stocks } = useStocks();
   const { products } = useProducts();
+  const { customers } = useCustomers();
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
-    const { data } = await api.get<Order[]>('/orders');
+    const { data } = await api.get<Order[]>('/orders', {
+      params: {
+        status: statusFilter,
+      },
+    });
 
     setLoading(false);
     return data;
-  }, []);
-
-  useEffect(() => {
-    loadOrders().then(response => {
-      setOrders(
-        response.map(order => ({
-          ...order,
-          status_formatted: statusVariations[order.status],
-          price_formatted: currencyFormatter(order.price),
-          created_at_formatted: dateFormatter(order.created_at),
-        })),
-      );
-    });
-  }, [loadOrders, auth.user]);
+  }, [statusFilter]);
 
   const addProductToOrder = useCallback(
     async ({ product_id }: AddProductToOrderProps) => {
@@ -239,7 +231,7 @@ function OrdersProvider({ children }: OrdersProviderProps): JSX.Element {
 
         setProductsOrder(updatedProductsOrder);
       } else {
-        throw new Error('aaaa');
+        throw new Error('Algo deu errado');
       }
     },
     [productsOrder],
@@ -247,6 +239,14 @@ function OrdersProvider({ children }: OrdersProviderProps): JSX.Element {
 
   const createProductOrder = useCallback(
     async ({ customer_id }: CreateProductsOrder) => {
+      const customer = customers.find(
+        findCustomer => findCustomer.id === customer_id,
+      );
+
+      if (!customer) {
+        throw new Error('customor could not be found');
+      }
+
       const productsOrderFormatted = productsOrder.map(({ id, amount }) => ({
         id,
         quantity: amount,
@@ -269,13 +269,15 @@ function OrdersProvider({ children }: OrdersProviderProps): JSX.Element {
         status_formatted: statusVariations[order.status],
         price_formatted: currencyFormatter(order.price),
         created_at_formatted: dateFormatter(order.created_at),
+        customer,
+        customer_id: customer.id,
       };
 
       newOrders.push(created_order_formatted);
 
       setOrders(newOrders);
     },
-    [productsOrder, orders],
+    [productsOrder, orders, customers],
   );
 
   const approveOrder = useCallback(
@@ -288,12 +290,25 @@ function OrdersProvider({ children }: OrdersProviderProps): JSX.Element {
         order => order.id === order_id,
       );
 
-      newOrders[findOrderIndex].status = 'approved';
+      newOrders.splice(findOrderIndex, 1);
 
       setOrders(newOrders);
     },
     [orders],
   );
+
+  useEffect(() => {
+    loadOrders().then(response => {
+      setOrders(
+        response.map(order => ({
+          ...order,
+          status_formatted: statusVariations[order.status],
+          price_formatted: currencyFormatter(order.price),
+          created_at_formatted: dateFormatter(order.created_at),
+        })),
+      );
+    });
+  }, [loadOrders, auth.user]);
 
   return (
     <OrdersContext.Provider

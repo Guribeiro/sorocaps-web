@@ -10,7 +10,6 @@ import {
 import { EditOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { useMemo } from 'react';
 import { ProductState } from '../../hooks/products';
 
 import { useOrders, Status, Order } from '../../hooks/orders';
@@ -25,12 +24,8 @@ type CustomTableProps = {
 };
 
 function SaleOrders({ label }: CustomTableProps): JSX.Element {
-  const { setStatusFilter, loading, orders, statusFilter } = useOrders();
+  const { setStatusFilter, loading, orders } = useOrders();
   const navigate = useNavigate();
-
-  const filteredOrders = useMemo(() => {
-    return orders.filter(order => order.status === statusFilter);
-  }, [statusFilter, orders]);
 
   return (
     <Content>
@@ -41,80 +36,82 @@ function SaleOrders({ label }: CustomTableProps): JSX.Element {
           Novo pedido de venda
         </Button>
       </div>
-      <Tabs onChange={key => setStatusFilter(key as Status)}>
-        <TabPane tab="Em processo" key="pending">
-          <Table dataSource={filteredOrders} loading={loading} rowKey="id">
-            <Column
-              title="Cliente"
-              key="customer_id"
-              render={(_: any, record: Order) => (
-                <Text>{record.customer.corporate_name}</Text>
-              )}
-            />
-            <Column
-              title="Status do pedido"
-              dataIndex="status_formatted"
-              key="status_formatted"
-            />
+      {orders.length && (
+        <Tabs onChange={key => setStatusFilter(key as Status)}>
+          <TabPane tab="Em processo" key="pending">
+            <Table dataSource={orders} loading={loading} rowKey="id">
+              <Column
+                title="Cliente"
+                key="customer_id"
+                render={(_: any, record: Order) => (
+                  <Text>{record.customer.corporate_name}</Text>
+                )}
+              />
+              <Column
+                title="Status do pedido"
+                dataIndex="status_formatted"
+                key="status_formatted"
+              />
 
-            <Column
-              title="Valor do pedido"
-              dataIndex="price_formatted"
-              key="price_formatted"
-            />
+              <Column
+                title="Valor do pedido"
+                dataIndex="price_formatted"
+                key="price_formatted"
+              />
 
-            <Column
-              title="Editar"
-              key="action"
-              render={(_: any, record: ProductState) => (
-                <Space size="middle">
+              <Column
+                title="Editar"
+                key="action"
+                render={(_: any, record: ProductState) => (
                   <Space size="middle">
-                    <Link to={`/sale-order/${record.id}`}>
-                      <EditOutlined />
-                    </Link>
+                    <Space size="middle">
+                      <Link to={`/sale-order/${record.id}`}>
+                        <EditOutlined />
+                      </Link>
+                    </Space>
                   </Space>
-                </Space>
-              )}
-            />
-          </Table>
-        </TabPane>
-        <TabPane tab="Aprovados" key="approved">
-          <Table dataSource={filteredOrders} loading={loading} rowKey="id">
-            <Column
-              title="Cliente"
-              key="customer_id"
-              render={(_: any, record: Order) => (
-                <Text>{record.customer.corporate_name}</Text>
-              )}
-            />
-            <Column
-              title="Status do pedido"
-              dataIndex="status_formatted"
-              key="status_formatted"
-            />
+                )}
+              />
+            </Table>
+          </TabPane>
+          <TabPane tab="Aprovados" key="approved">
+            <Table dataSource={orders} loading={loading} rowKey="id">
+              <Column
+                title="Cliente"
+                key="customer_id"
+                render={(_: any, record: Order) => (
+                  <Text>{record.customer.corporate_name}</Text>
+                )}
+              />
+              <Column
+                title="Status do pedido"
+                dataIndex="status_formatted"
+                key="status_formatted"
+              />
 
-            <Column
-              title="Valor do pedido"
-              dataIndex="price_formatted"
-              key="price_formatted"
-            />
+              <Column
+                title="Valor do pedido"
+                dataIndex="price_formatted"
+                key="price_formatted"
+              />
 
-            <Column
-              title="Ver mais"
-              key="action"
-              render={(_: any, record: ProductState) => (
-                <Space size="middle">
+              <Column
+                title="Ver mais"
+                key="action"
+                render={(_: any, record: ProductState) => (
                   <Space size="middle">
-                    <Link to={`/sale-order/${record.id}/approved`}>
-                      Detalhes
-                    </Link>
+                    <Space size="middle">
+                      <Link to={`/sale-order/${record.id}/approved`}>
+                        Detalhes
+                      </Link>
+                    </Space>
                   </Space>
-                </Space>
-              )}
-            />
-          </Table>
-        </TabPane>
-      </Tabs>
+                )}
+              />
+            </Table>
+          </TabPane>
+        </Tabs>
+      )}
     </Content>
   );
 }

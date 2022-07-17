@@ -14,6 +14,7 @@ import currencyFormatter from '../utils/currencyFormatter';
 type StocksContextData = {
   loading: boolean;
   stocks: StockState[];
+  setStocks: React.Dispatch<React.SetStateAction<StockState[]>>;
 };
 
 const StocksContext = createContext<StocksContextData>({} as StocksContextData);
@@ -22,7 +23,7 @@ type OrdersProviderProps = {
   children: ReactNode;
 };
 
-type Stock = {
+export type Stock = {
   id: string;
   product_id: string;
   product: Product;
@@ -30,7 +31,7 @@ type Stock = {
   amount: number;
 };
 
-type StockState = Stock & {
+export type StockState = Stock & {
   price_unit_formatted: string;
 };
 
@@ -58,7 +59,7 @@ function StocksProvider({ children }: OrdersProviderProps): JSX.Element {
   }, [loadStocks]);
 
   return (
-    <StocksContext.Provider value={{ loading, stocks }}>
+    <StocksContext.Provider value={{ loading, stocks, setStocks }}>
       {children}
     </StocksContext.Provider>
   );

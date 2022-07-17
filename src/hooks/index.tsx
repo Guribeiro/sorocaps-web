@@ -16,9 +16,9 @@ function AppProvider({ children }: AppProviderProps): JSX.Element {
       <TabProvider>
         <StocksProvider>
           <ProductsProvider>
-            <OrdersProvider>
-              <CustomersProvider>{children}</CustomersProvider>
-            </OrdersProvider>
+            <CustomersProvider>
+              <OrdersProvider>{children}</OrdersProvider>
+            </CustomersProvider>
           </ProductsProvider>
         </StocksProvider>
       </TabProvider>

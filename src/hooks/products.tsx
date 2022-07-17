@@ -11,6 +11,7 @@ import api from '../shared/services/api';
 import { useAuth } from './auth';
 
 import currencyFormatter from '../utils/currencyFormatter';
+import { useStocks, Stock, StockState } from './stocks';
 
 type ProductsContextData = {
   loadProducts(): Promise<Product[]>;
@@ -18,7 +19,6 @@ type ProductsContextData = {
   remove(data: RemoveProps): Promise<void>;
   update(data: UpdateProps): Promise<void>;
   products: ProductState[];
-  stocks: Stock[];
   selectedProduct: ProductState;
   setSelectedProduct: React.Dispatch<React.SetStateAction<ProductState>>;
 };
@@ -74,16 +74,10 @@ type CreateProps = {
   limit: number;
 };
 
-type Stock = {
-  id: string;
-  amount: string;
-  price_unit: number;
-};
-
 function ProductsProvider({ children }: ProductsProviderProps): JSX.Element {
   const { auth } = useAuth();
   const [products, setProducts] = useState<ProductState[]>([]);
-  const [stocks, setStocks] = useState<Stock[]>([]);
+  const { setStocks, stocks } = useStocks();
   const [selectedProduct, setSelectedProduct] = useState<ProductState>(
     {} as ProductState,
   );
@@ -122,11 +116,24 @@ function ProductsProvider({ children }: ProductsProviderProps): JSX.Element {
         sale_price,
       });
 
-      await api.post('/stocks', {
+      const { data: created_stock } = await api.post<Stock>('/stocks', {
         product_id: created_product.id,
         amount,
         limit,
       });
+
+      const newStocks = [...stocks];
+
+      const stockFormatted: StockState = {
+        ...created_stock,
+        price_unit_formatted: currencyFormatter(created_stock.price_unit),
+        product: created_product,
+        product_id: created_product.id,
+      };
+
+      newStocks.push(stockFormatted);
+
+      setStocks(newStocks);
 
       const product: ProductState = {
         ...created_product,
@@ -136,7 +143,7 @@ function ProductsProvider({ children }: ProductsProviderProps): JSX.Element {
 
       setProducts(prev => [...prev, product]);
     },
-    [],
+    [stocks, setStocks],
   );
 
   const remove = useCallback(async ({ product_id }: RemoveProps) => {
@@ -199,8 +206,15 @@ function ProductsProvider({ children }: ProductsProviderProps): JSX.Element {
       );
     });
 
-    loadStock().then(response => setStocks(response));
-  }, [loadProducts, auth.user, loadStock]);
+    loadStock().then(response => {
+      const stocks_formatted = response.map(stock => ({
+        ...stock,
+        price_unit_formatted: currencyFormatter(stock.price_unit),
+      }));
+
+      setStocks(stocks_formatted);
+    });
+  }, [loadProducts, auth.user, loadStock, setStocks]);
 
   return (
     <ProductsContext.Provider
@@ -210,7 +224,6 @@ function ProductsProvider({ children }: ProductsProviderProps): JSX.Element {
         remove,
         update,
         products,
-        stocks,
         selectedProduct,
         setSelectedProduct,
       }}

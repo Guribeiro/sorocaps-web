@@ -75,7 +75,7 @@ function SaleOrderDetails(): JSX.Element {
 
   useEffect(() => {
     api
-      .get<OrderProduct[]>(`/orders/${sale_order_id}`, {
+      .get<OrderProduct[]>(`/orders/${order.id}`, {
         params: {
           customer_id: order.customer_id,
         },
@@ -89,7 +89,7 @@ function SaleOrderDetails(): JSX.Element {
         ),
       )
       .catch(error => message.error(error));
-  }, [order.customer_id, sale_order_id]);
+  }, [order.customer_id, sale_order_id, order.id]);
 
   return (
     <Layout className="layout" style={{ minHeight: '100vh' }}>
@@ -128,6 +128,7 @@ function SaleOrderDetails(): JSX.Element {
                   {order.price_formatted}
                 </Item>
               </Descriptions>
+
               <Table dataSource={orderProducts} rowKey="id">
                 <Column
                   title="Nome do produto"

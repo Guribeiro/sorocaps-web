@@ -34,7 +34,7 @@ function RegisterSaleOrderProducts(): JSX.Element {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { products } = useProducts();
-  const { productsOrder, clearProductsOrder } = useOrders();
+  const { productsOrder } = useOrders();
 
   const { addProductToOrder } = useOrders();
 
