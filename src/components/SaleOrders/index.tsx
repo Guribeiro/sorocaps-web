@@ -36,82 +36,80 @@ function SaleOrders({ label }: CustomTableProps): JSX.Element {
           Novo pedido de venda
         </Button>
       </div>
-      {orders.length && (
-        <Tabs onChange={key => setStatusFilter(key as Status)}>
-          <TabPane tab="Em processo" key="pending">
-            <Table dataSource={orders} loading={loading} rowKey="id">
-              <Column
-                title="Cliente"
-                key="customer_id"
-                render={(_: any, record: Order) => (
-                  <Text>{record.customer.corporate_name}</Text>
-                )}
-              />
-              <Column
-                title="Status do pedido"
-                dataIndex="status_formatted"
-                key="status_formatted"
-              />
+      <Tabs onChange={key => setStatusFilter(key as Status)}>
+        <TabPane tab="Em processo" key="pending">
+          <Table dataSource={orders} loading={loading} rowKey="id">
+            <Column
+              title="Cliente"
+              key="customer_id"
+              render={(_: any, record: Order) => (
+                <Text>{record.customer.corporate_name}</Text>
+              )}
+            />
+            <Column
+              title="Status do pedido"
+              dataIndex="status_formatted"
+              key="status_formatted"
+            />
 
-              <Column
-                title="Valor do pedido"
-                dataIndex="price_formatted"
-                key="price_formatted"
-              />
+            <Column
+              title="Valor do pedido"
+              dataIndex="price_formatted"
+              key="price_formatted"
+            />
 
-              <Column
-                title="Editar"
-                key="action"
-                render={(_: any, record: ProductState) => (
+            <Column
+              title="Editar"
+              key="action"
+              render={(_: any, record: ProductState) => (
+                <Space size="middle">
                   <Space size="middle">
-                    <Space size="middle">
-                      <Link to={`/sale-order/${record.id}`}>
-                        <EditOutlined />
-                      </Link>
-                    </Space>
+                    <Link to={`/sale-order/${record.id}`}>
+                      <EditOutlined />
+                    </Link>
                   </Space>
-                )}
-              />
-            </Table>
-          </TabPane>
-          <TabPane tab="Aprovados" key="approved">
-            <Table dataSource={orders} loading={loading} rowKey="id">
-              <Column
-                title="Cliente"
-                key="customer_id"
-                render={(_: any, record: Order) => (
-                  <Text>{record.customer.corporate_name}</Text>
-                )}
-              />
-              <Column
-                title="Status do pedido"
-                dataIndex="status_formatted"
-                key="status_formatted"
-              />
+                </Space>
+              )}
+            />
+          </Table>
+        </TabPane>
+        <TabPane tab="Aprovados" key="approved">
+          <Table dataSource={orders} loading={loading} rowKey="id">
+            <Column
+              title="Cliente"
+              key="customer_id"
+              render={(_: any, record: Order) => (
+                <Text>{record.customer.corporate_name}</Text>
+              )}
+            />
+            <Column
+              title="Status do pedido"
+              dataIndex="status_formatted"
+              key="status_formatted"
+            />
 
-              <Column
-                title="Valor do pedido"
-                dataIndex="price_formatted"
-                key="price_formatted"
-              />
+            <Column
+              title="Valor do pedido"
+              dataIndex="price_formatted"
+              key="price_formatted"
+            />
 
-              <Column
-                title="Ver mais"
-                key="action"
-                render={(_: any, record: ProductState) => (
+            <Column
+              title="Ver mais"
+              key="action"
+              render={(_: any, record: ProductState) => (
+                <Space size="middle">
                   <Space size="middle">
-                    <Space size="middle">
-                      <Link to={`/sale-order/${record.id}/approved`}>
-                        Detalhes
-                      </Link>
-                    </Space>
+                    <Link to={`/sale-order/${record.id}/approved`}>
+                      Detalhes
+                    </Link>
                   </Space>
-                )}
-              />
-            </Table>
-          </TabPane>
-        </Tabs>
-      )}
+                </Space>
+              )}
+            />
+          </Table>
+        </TabPane>
+      </Tabs>
     </Content>
   );
 }
