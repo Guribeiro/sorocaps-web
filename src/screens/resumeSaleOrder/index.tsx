@@ -84,6 +84,12 @@ function ResumeSaleOrder(): JSX.Element {
   const handleCreateSaleOrder = useCallback(async () => {
     try {
       setLoading(true);
+
+      if (productsOrder.length < 1) {
+        message.error('Não há produtos no pedido de venda');
+        return;
+      }
+
       await createProductOrder({ customer_id });
       message.success('Pedido de venda realizado com sucesso');
       navigate('/dashboard');
@@ -93,7 +99,7 @@ function ResumeSaleOrder(): JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, [createProductOrder, customer_id, navigate]);
+  }, [createProductOrder, customer_id, navigate, productsOrder.length]);
 
   const handleOpenModal = useCallback(async () => {
     Modal.confirm({
